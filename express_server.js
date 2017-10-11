@@ -42,11 +42,25 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if(!email || !password) {
+    res.status(400).send("Could not register a new user. Either email or password is empty.");
+  }
+
+  for(const user in users) {
+    if(email === users[user].email) {
+      res.status(400).send("A user is already registered with that email");
+      return;
+    }
+  }
+
   const newUserId = generateRandomString();
   users[newUserId] = {
     id: newUserId,
-    email: req.body.email,
-    password: req.body.password
+    email: email,
+    password: password
   };
   res.cookie("user_id", newUserId);
 

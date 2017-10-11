@@ -65,7 +65,6 @@ app.post("/register", (req, res) => {
   };
   res.cookie("user_id", newUserId);
 
-  console.log(users);
   res.redirect("/urls");
 });
 
@@ -89,8 +88,26 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect('/urls');
+  const email = req.body.email;
+  const password = req.body.password;
+
+  console.log(email, password);
+
+  for(const userID in users) {
+    const user = users[userID];
+    if(user.email === email) {
+      if(user.password == password) {
+        res.cookie("user_id", user.id);
+        res.redirect('/');
+      } else {
+        res.status(403).send("The password for this email is incorrect.");
+      }
+
+      return;
+    }
+  }
+
+  res.status(403).send("The email user was not found.");
 });
 
 app.post("/logout", (req, res) => {

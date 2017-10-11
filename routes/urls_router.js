@@ -37,7 +37,6 @@ router.get("/", (req, res) => {
     urls: req.app.get('urls'),
     username: user
   };
-  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 

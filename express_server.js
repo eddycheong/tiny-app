@@ -28,6 +28,7 @@ const generateRandomString = require("./lib/generate_random_string");
 
 app.set("view engine", "ejs");
 app.set("urls", urlDatabase);
+app.set("users", users);
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -81,6 +82,10 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+app.get("/login", (req, res) => {
+  res.render('login');
 });
 
 app.post("/login", (req, res) => {

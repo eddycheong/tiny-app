@@ -59,19 +59,24 @@ router.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-router.get("/u/:shortURL", (req, res) => {
-  // TODO: refactor the validation by using router.params or router.params
-  if(!urlDatabase[req.params.shortURL]) {
-    res.status(404).send(`Could not find the short URL: ${req.params.shortURL}`);
+// route middleware to validate :shortURL
+router.param('shortURL', (req, res, next, shortURL) => {
+  const longURLExist = urlDatabase[shortURL];
+
+  if(longURLExist) {
+    next();
+    return;
   }
-  else {
-    let longURL = urlDatabase[req.params.shortURL];
-    res.redirect(longURL);
-  }
+
+  res.status(404);
+  res.send(`Could not find the short URL: ${req.params.shortURL}`);
 });
 
-router.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+router.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL];
+
+  res.redirect(longURL);
 });
 
 router.get("/login", (req, res) => {
@@ -151,13 +156,16 @@ router.post("/urls/:id", (req, res) => {
   res.redirect(`/urls/${req.params.id}`);
 });
 
-
 router.post("/urls/", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
 
   urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
+});
+
+router.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
 
 module.exports = router;

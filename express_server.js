@@ -29,6 +29,11 @@ app.get("/", (req, res) => {
   res.end("Hello!");
 });
 
+app.get("/register", (req, res) => {
+  res.render('register');
+  res.end("Okay");
+});
+
 app.get("/u/:shortURL", (req, res) => {
   // TODO: refactor the validation by using app.params or router.params
   if(!urlDatabase[req.params.shortURL]) {

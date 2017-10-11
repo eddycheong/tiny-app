@@ -22,7 +22,9 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const urlsRouter = require('./routes/urls_router.js');
+const urlsRouter = require("./routes/urls_router.js");
+
+const generateRandomString = require("./lib/generate_random_string");
 
 app.set("view engine", "ejs");
 app.set("urls", urlDatabase);
@@ -36,17 +38,20 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  console.log(users);
   res.render('register');
 });
 
 app.post("/register", (req, res) => {
-  users["test"] = {
-    id: "test",
+  const newUserId = generateRandomString();
+  users[newUserId] = {
+    id: newUserId,
     email: req.body.email,
     password: req.body.password
   };
-  res.redirect("/register");
+  res.cookie("user_id", newUserId);
+
+  console.log(users);
+  res.redirect("/urls");
 });
 
 app.get("/u/:shortURL", (req, res) => {

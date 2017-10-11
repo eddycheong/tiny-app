@@ -49,6 +49,12 @@ router.post("/:id/delete", (req, res) => {
   res.redirect('/urls');
 });
 
+router.post("/:id", (req, res) => {
+  req.app.get('urls')[req.params.id] = req.body.editURL;
+  res.redirect(`/urls/${req.params.id}`);
+});
+
+
 router.post("/", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;

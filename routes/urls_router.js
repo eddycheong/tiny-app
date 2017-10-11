@@ -30,17 +30,26 @@ router.use(function (req, res, next) {
 });
 
 router.get("/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+    username: req.cookies.username
+  };
+  res.render("urls_new", templateVars);
 });
 
 router.get("/:id", (req, res) => {
 
-  let templateVars = { shortURL: req.params.id, longURL: req.app.get('urls')[req.params.id] };
+  let templateVars = {
+    shortURL: req.params.id,
+    longURL: req.app.get('urls')[req.params.id],
+    username: req.cookies.username };
   res.render("urls_show", templateVars);
 });
 
 router.get("/", (req, res) => {
-  let templateVars = { urls: req.app.get('urls') };
+  let templateVars = {
+    urls: req.app.get('urls'),
+    username: req.cookies.username
+  };
   res.render("urls_index", templateVars);
 });
 

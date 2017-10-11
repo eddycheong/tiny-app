@@ -45,7 +45,6 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  console.log(req.body.username);
   res.cookie("username", req.body.username);
   res.redirect('/urls');
 });

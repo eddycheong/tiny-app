@@ -12,7 +12,7 @@ router.get("/new", (req, res) => {
   const user = req.app.get('users')[user_id];
 
   let templateVars = {
-    username: user
+    user_id: user
   };
   res.render("urls_new", templateVars);
 });
@@ -24,7 +24,7 @@ router.get("/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     longURL: req.app.get('urls')[req.params.id],
-    username: user };
+    user_id: user };
   res.render("urls_show", templateVars);
 });
 
@@ -32,10 +32,9 @@ router.get("/", (req, res) => {
   const user_id = req.cookies.user_id;
   const user = req.app.get('users')[user_id];
 
-
   let templateVars = {
     urls: req.app.get('urls'),
-    username: user
+    user_id: user
   };
   res.render("urls_index", templateVars);
 });

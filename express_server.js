@@ -4,6 +4,7 @@ const urlDatabase = {
 };
 
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -21,6 +22,7 @@ app.set("urls", urlDatabase);
 // // });
 
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 app.use('/urls', urlsRouter);
 
 app.get("/", (req, res) => {
@@ -28,6 +30,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
+  // TODO: refactor the validation by using app.params or router.params
   if(!urlDatabase[req.params.shortURL]) {
     res.status(404).send(`Could not find the short URL: ${req.params.shortURL}`);
   }
@@ -39,6 +42,12 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+app.post("/login", (req, res) => {
+  console.log(req.body.username);
+  res.cookie("username", req.body.username);
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {

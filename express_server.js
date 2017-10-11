@@ -3,6 +3,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
+
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const express = require("express");
@@ -14,13 +27,6 @@ const urlsRouter = require('./routes/urls_router.js');
 app.set("view engine", "ejs");
 app.set("urls", urlDatabase);
 
-// app.locals.urls = urlDatabase;
-
-// // app.use((req, res, next) => {
-// //   res.locals.urls = urlDatabase;
-// //   next();
-// // });
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use('/urls', urlsRouter);
@@ -30,8 +36,17 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  console.log(users);
   res.render('register');
-  res.end("Okay");
+});
+
+app.post("/register", (req, res) => {
+  users["test"] = {
+    id: "test",
+    email: req.body.email,
+    password: req.body.password
+  };
+  res.redirect("/register");
 });
 
 app.get("/u/:shortURL", (req, res) => {

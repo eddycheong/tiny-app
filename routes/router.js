@@ -151,8 +151,19 @@ router.get("/urls/new", (req, res) => {
 
 router.get("/urls/:id", (req, res) => {
   const user_id = req.cookies.user_id;
+
+  // Check if user is online
+  if(!user_id) {
+    // TODO: refactor to be more general
+    res.status(403);
+    res.send("Login or register a new account.");
+    return;
+  }
+
   const user = users[user_id];
   const shortURL = req.params.id;
+
+  // TODO: check if the entry actually exist
   const urlOwner = urlDatabase[shortURL].user_id;
 
   if(user_id === urlOwner) {
@@ -161,13 +172,25 @@ router.get("/urls/:id", (req, res) => {
       longURL: urlDatabase[shortURL].longURL,
       user_id: user_id };
     res.render("urls_show", templateVars);
+    return;
   }
+
+  res.status(403);
+  res.send("You do not have permissions to view this URL because you are not the owner.");
 
 });
 
 router.get("/urls/", (req, res) => {
   const user_id = req.cookies.user_id;
   const user = users[user_id];
+
+  // Check if user is online
+  if(!user_id) {
+    // TODO: refactor to be more general
+    res.status(403);
+    res.send("Login or register a new account.");
+    return;
+  }
 
   const userURLs = urlsForUser(user_id);
 

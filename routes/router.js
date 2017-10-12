@@ -6,11 +6,11 @@ const hash = (password) => {
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    user_id: hash("userRandomID")
+    user_id: "userRandomID"
   },
   "9sm5xK": {
     longURL:"http://www.google.com",
-    user_id: hash("user2RandomID")
+    user_id: "user2RandomID"
   }
 };
 
@@ -18,12 +18,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: hash("purple-monkey-dinosaur")
   },
  "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: hash("dishwasher-funk")
   }
 };
 

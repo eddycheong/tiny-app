@@ -83,8 +83,8 @@ router.post("/login", (req, res) => {
     }
   }
 
-  // res.status(403);
-  // res.send("The email user was not found.");
+  res.status(403);
+  res.send("The email user was not found.");
 });
 
 router.get("/register", (req, res) => {
@@ -208,7 +208,17 @@ router.post("/urls/", (req, res) => {
 
 router.param('id', (req, res, next, shortURL) => {
   const user_id = req.session.user_id;
-  const urlOwner = urlDatabase[shortURL].user_id;
+  const shortUrlExist = urlDatabase[shortURL];
+
+  let urlOwner;
+
+  if(shortUrlExist) {
+    urlOwner = urlDatabase[shortURL].user_id;
+  } else {
+    res.status(404);
+    res.send("shortURL could not be found");
+    return;
+  }
 
   if(user_id !== urlOwner) {
     res.status(403);

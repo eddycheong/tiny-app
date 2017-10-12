@@ -41,8 +41,8 @@ router.post("/register", (req, res) => {
     res.status(400).send("Could not register a new user. Either email or password is empty.");
   }
 
-  for(const user in users) {
-    if(email === users[user].email) {
+  for(const userID in users) {
+    if(email === users[userID].email) {
       res.status(400).send("A user is already registered with that email");
       return;
     }
@@ -114,12 +114,19 @@ router.post("/logout", (req, res) => {
 /* -----------------------------------------
   ROUTE: /urls
  ----------------------------------------- */
+
 router.get("/urls/new", (req, res) => {
   const user_id = req.cookies.user_id;
+
+  if(!user_id) {
+    res.redirect("/login");
+    return;
+  }
+
   const user = users[user_id];
 
-  let templateVars = {
-    user_id: user
+  const templateVars = {
+    user_id: user_id
   };
   res.render("urls_new", templateVars);
 });
@@ -131,7 +138,7 @@ router.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
-    user_id: user };
+    user_id: user_id };
   res.render("urls_show", templateVars);
 });
 
@@ -141,7 +148,7 @@ router.get("/urls/", (req, res) => {
 
   let templateVars = {
     urls: urlDatabase,
-    user_id: user
+    user_id: user_id
   };
   res.render("urls_index", templateVars);
 });

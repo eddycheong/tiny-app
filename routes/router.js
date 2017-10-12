@@ -49,7 +49,14 @@ router.use(function (req, res, next) {
 });
 
 router.get("/", (req, res) => {
-    res.end("Hello!");
+    const sessionUserID = req.session.user_id;
+
+    if(sessionUserID) {
+      res.redirect("/urls");
+      return;
+    }
+
+    res.redirect("/login");
 });
 
 router.get("/login", (req, res) => {

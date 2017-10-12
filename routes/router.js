@@ -141,6 +141,22 @@ router.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// This route is one the few exceptions that has to redirect if user is not logged in
+// TODO: investigate if this can be better refactored
+router.get("/urls/new", (req, res) => {
+  const sessionUserID = req.session.user_id;
+
+  if(!sessionUserID) {
+    res.redirect("/login");
+    return;
+  }
+
+  res.locals.user_id = sessionUserID;
+  res.locals.email = users[sessionUserID].email;
+
+  res.render("urls_new");
+});
+
 /* -----------------------------------------
   LOGGED-IN USER MIDDLEWARE
  ----------------------------------------- */
@@ -163,18 +179,6 @@ router.use((req, res, next) => {
 router.post("/logout", (req, res) => {
   req.session = null;
   res.redirect('/urls');
-});
-
-router.get("/urls/new", (req, res) => {
-  const user_id = req.session.user_id;
-
-  // TODO: dead code?
-  // if(!user_id) {
-  //   res.redirect("/login");
-  //   return;
-  // }
-
-  res.render("urls_new");
 });
 
 router.get("/urls/", (req, res) => {

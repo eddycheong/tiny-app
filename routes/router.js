@@ -77,7 +77,8 @@ router.post("/register", (req, res) => {
     email: email,
     password: hashPassword
   };
-  res.cookie("user_id", newUserId);
+  // res.cookie("user_id", newUserId);
+  req.session.user_id = newUserId;
   res.redirect("/urls");
 });
 
@@ -112,7 +113,8 @@ router.post("/login", (req, res) => {
     const user = users[userID];
     if(user.email === email) {
       if(bcrypt.compareSync(password, user.password)) {
-        res.cookie("user_id", user.id);
+        // res.cookie("user_id", user.id);
+        req.session.user_id = user.id;
         res.redirect('/');
       } else {
         res.status(403).send("The password for this email is incorrect.");
@@ -126,7 +128,8 @@ router.post("/login", (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  // res.clearCookie("user_id");
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -135,7 +138,8 @@ router.post("/logout", (req, res) => {
  ----------------------------------------- */
 
 router.get("/urls/new", (req, res) => {
-  const user_id = req.cookies.user_id;
+  // const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
 
   if(!user_id) {
     res.redirect("/login");
@@ -151,7 +155,8 @@ router.get("/urls/new", (req, res) => {
 });
 
 router.get("/urls/:id", (req, res) => {
-  const user_id = req.cookies.user_id;
+  // const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
 
   // Check if user is online
   if(!user_id) {
@@ -182,7 +187,8 @@ router.get("/urls/:id", (req, res) => {
 });
 
 router.get("/urls/", (req, res) => {
-  const user_id = req.cookies.user_id;
+  // const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const user = users[user_id];
 
   // Check if user is online
@@ -203,7 +209,8 @@ router.get("/urls/", (req, res) => {
 });
 
 router.post("/urls/:id/delete", (req, res) => {
-  const user_id = req.cookies.user_id;
+  // const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const shortURL = req.params.id;
   const urlOwner = urlDatabase[shortURL].user_id;
 
@@ -218,7 +225,8 @@ router.post("/urls/:id/delete", (req, res) => {
 });
 
 router.post("/urls/:id", (req, res) => {
-  const user_id = req.cookies.user_id;
+  // const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const shortURL = req.params.id;
   const newLongURL = req.body.editURL;
   const urlOwner = urlDatabase[shortURL].user_id;
@@ -234,7 +242,8 @@ router.post("/urls/:id", (req, res) => {
 });
 
 router.post("/urls/", (req, res) => {
-  const user_id = req.cookies.user_id;
+  // const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
 
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;

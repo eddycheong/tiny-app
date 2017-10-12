@@ -1,11 +1,11 @@
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    user_id: ""
+    user_id: "userRandomID"
   },
   "9sm5xK": {
     longURL:"http://www.google.com",
-    user_id: ""
+    user_id: "user2RandomID"
   }
 };
 
@@ -21,6 +21,18 @@ const users = {
     password: "dishwasher-funk"
   }
 };
+
+function urlsForUser(id) {
+  const userURLs = {};
+
+  for(const shortURL in urlDatabase) {
+    if(urlDatabase[shortURL].user_id === id) {
+      userURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+
+  return userURLs;
+}
 
 const generateRandomString = require('../lib/generate_random_string');
 
@@ -140,20 +152,27 @@ router.get("/urls/new", (req, res) => {
 router.get("/urls/:id", (req, res) => {
   const user_id = req.cookies.user_id;
   const user = users[user_id];
+  const shortURL = req.params.id;
+  const urlOwner = urlDatabase[shortURL].user_id;
 
-  let templateVars = {
-    shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL,
-    user_id: user_id };
-  res.render("urls_show", templateVars);
+  if(user_id === urlOwner) {
+    const templateVars = {
+      shortURL: shortURL,
+      longURL: urlDatabase[shortURL].longURL,
+      user_id: user_id };
+    res.render("urls_show", templateVars);
+  }
+
 });
 
 router.get("/urls/", (req, res) => {
   const user_id = req.cookies.user_id;
   const user = users[user_id];
 
+  const userURLs = urlsForUser(user_id);
+
   let templateVars = {
-    urls: urlDatabase,
+    urls: userURLs,
     user_id: user_id
   };
   res.render("urls_index", templateVars);

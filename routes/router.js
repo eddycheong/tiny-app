@@ -27,6 +27,17 @@ const users = {
   }
 };
 
+
+function redirectLoggedInUser(req, res, next) {
+  const sessionUserID = req.session.user_id;
+
+  if(sessionUserID) {
+    res.redirect("/urls");
+    return;
+  }
+  next();
+}
+
 function urlsForUser(id) {
   const userURLs = {};
 
@@ -44,22 +55,11 @@ const generateRandomString = require('../lib/generate_random_string');
 const express = require('express');
 const router = express.Router();
 
-router.use(function (req, res, next) {
-  next();
+router.get("/", redirectLoggedInUser, (req, res) => {
+  res.redirect("/login");
 });
 
-router.get("/", (req, res) => {
-    const sessionUserID = req.session.user_id;
-
-    if(sessionUserID) {
-      res.redirect("/urls");
-      return;
-    }
-
-    res.redirect("/login");
-});
-
-router.get("/login", (req, res) => {
+router.get("/login", redirectLoggedInUser, (req, res) => {
   res.render('login');
 });
 
@@ -87,7 +87,7 @@ router.post("/login", (req, res) => {
   res.send("The email user was not found.");
 });
 
-router.get("/register", (req, res) => {
+router.get("/register", redirectLoggedInUser, (req, res) => {
   res.render('register');
 });
 
@@ -250,7 +250,7 @@ router.post("/urls/:id", (req, res) => {
   const newLongURL = req.body.editURL;
 
   urlDatabase[shortURL].longURL = newLongURL;
-  res.redirect(`/urls/${req.params.id}`);
+  res.redirect(`/urls`);
   return;
 });
 

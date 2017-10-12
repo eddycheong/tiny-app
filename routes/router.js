@@ -1,32 +1,9 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const hash = (password) => {
   return bcrypt.hashSync(password, 10);
 };
 
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    user_id: "userRandomID"
-  },
-  "9sm5xK": {
-    longURL:"http://www.google.com",
-    user_id: "user2RandomID"
-  }
-};
-
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: hash("purple-monkey-dinosaur")
-  },
- "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: hash("dishwasher-funk")
-  }
-};
-
+const {urlDatabase, users} = require("../lib/database");
 
 function redirectLoggedInUser(req, res, next) {
   const sessionUserID = req.session.user_id;
@@ -134,11 +111,6 @@ router.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[shortURL].longURL;
 
   res.redirect(longURL);
-});
-
-// TODO: DELETE, ONLY USED FOR DEBUGGING
-router.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
 });
 
 // This route is one the few exceptions that has to redirect if user is not logged in

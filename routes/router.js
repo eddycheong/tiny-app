@@ -1,11 +1,16 @@
+const bcrypt = require('bcrypt');
+const hash = (password) => {
+  return bcrypt.hashSync(password, 10);
+};
+
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    user_id: "userRandomID"
+    user_id: hash("userRandomID")
   },
   "9sm5xK": {
     longURL:"http://www.google.com",
-    user_id: "user2RandomID"
+    user_id: hash("user2RandomID")
   }
 };
 
@@ -53,9 +58,9 @@ router.get("/register", (req, res) => {
 
 router.post("/register", (req, res) => {
   const email = req.body.email;
-  const password = req.body.password;
+  const hashPassword = hash(req.body.password);
 
-  if(!email || !password) {
+  if(!email || !hashPassword) {
     res.status(400).send("Could not register a new user. Either email or password is empty.");
   }
 
@@ -70,10 +75,9 @@ router.post("/register", (req, res) => {
   users[newUserId] = {
     id: newUserId,
     email: email,
-    password: password
+    password: hashPassword
   };
   res.cookie("user_id", newUserId);
-
   res.redirect("/urls");
 });
 
@@ -104,13 +108,10 @@ router.get("/login", (req, res) => {
 router.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
-  console.log(email, password);
-
   for(const userID in users) {
     const user = users[userID];
     if(user.email === email) {
-      if(user.password == password) {
+      if(bcrypt.compareSync(password, user.password)) {
         res.cookie("user_id", user.id);
         res.redirect('/');
       } else {

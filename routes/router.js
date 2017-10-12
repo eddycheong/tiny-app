@@ -204,7 +204,6 @@ router.post("/urls/", (req, res) => {
 
 router.param('id', (req, res, next, shortURL) => {
   const user_id = req.session.user_id;
-  console.log(shortURL);
   const urlOwner = urlDatabase[shortURL].user_id;
 
   if(user_id !== urlOwner) {

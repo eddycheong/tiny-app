@@ -5,6 +5,7 @@
     </head>
     <body>
       <% include partials/_header %>
+      <a href="/urls/new">Create a New Short Link</a>
       <ul>
         <% for(url in urls) {%>
           <li><a href=<%= urls[url].longURL %>><%= url %><a>:<%= urls[url].longURL %></li>

@@ -1,6 +1,12 @@
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    user_id: ""
+  },
+  "9sm5xK": {
+    longURL:"http://www.google.com",
+    user_id: ""
+  }
 };
 
 const users = {
@@ -61,7 +67,7 @@ router.post("/register", (req, res) => {
 
 // route middleware to validate :shortURL
 router.param('shortURL', (req, res, next, shortURL) => {
-  const longURLExist = urlDatabase[shortURL];
+  const longURLExist = urlDatabase[shortURL].longURL;
 
   if(longURLExist) {
     next();
@@ -74,7 +80,7 @@ router.param('shortURL', (req, res, next, shortURL) => {
 
 router.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
+  const longURL = urlDatabase[shortURL].longURL;
 
   res.redirect(longURL);
 });
@@ -137,12 +143,13 @@ router.get("/urls/:id", (req, res) => {
 
   let templateVars = {
     shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     user_id: user_id };
   res.render("urls_show", templateVars);
 });
 
 router.get("/urls/", (req, res) => {
+  console.log(urlDatabase);
   const user_id = req.cookies.user_id;
   const user = users[user_id];
 
@@ -164,10 +171,16 @@ router.post("/urls/:id", (req, res) => {
 });
 
 router.post("/urls/", (req, res) => {
+  const user_id = req.cookies.user_id;
+
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
 
-  urlDatabase[shortURL] = longURL;
+  const userURL = {};
+  userURL.longURL = longURL;
+  userURL.user_id = user_id;
+
+  urlDatabase[shortURL] = userURL;
   res.redirect(`/urls/${shortURL}`);
 });
 

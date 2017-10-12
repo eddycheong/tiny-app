@@ -149,7 +149,6 @@ router.get("/urls/:id", (req, res) => {
 });
 
 router.get("/urls/", (req, res) => {
-  console.log(urlDatabase);
   const user_id = req.cookies.user_id;
   const user = users[user_id];
 
@@ -161,13 +160,34 @@ router.get("/urls/", (req, res) => {
 });
 
 router.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect('/urls');
+  const user_id = req.cookies.user_id;
+  const shortURL = req.params.id;
+  const urlOwner = urlDatabase[shortURL].user_id;
+
+  if(user_id === urlOwner) {
+    delete urlDatabase[shortURL];
+    res.redirect('/urls');
+    return;
+  }
+
+  res.status(403);
+  res.send("You are not the owner of this URL to delete it.");
 });
 
 router.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.editURL;
-  res.redirect(`/urls/${req.params.id}`);
+  const user_id = req.cookies.user_id;
+  const shortURL = req.params.id;
+  const newLongURL = req.body.editURL;
+  const urlOwner = urlDatabase[shortURL].user_id;
+
+  if(user_id === urlOwner) {
+    urlDatabase[shortURL].longURL = newLongURL;
+    res.redirect(`/urls/${req.params.id}`);
+    return;
+  }
+
+  res.status(403);
+  res.send("You are not the owner of this URL to edit it.");
 });
 
 router.post("/urls/", (req, res) => {

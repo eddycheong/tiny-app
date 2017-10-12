@@ -49,7 +49,35 @@ router.use(function (req, res, next) {
 });
 
 router.get("/", (req, res) => {
-  res.end("Hello!");
+    res.end("Hello!");
+});
+
+router.get("/login", (req, res) => {
+  res.render('login');
+});
+
+router.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  for(const userID in users) {
+    const user = users[userID];
+    if(user.email === email) {
+      if(bcrypt.compareSync(password, user.password)) {
+        req.session.user_id = user.id;
+        res.redirect('/');
+      } else {
+        // res.render("login", {error: ""});
+        res.status(403);
+        res.send("The password for this email is incorrect.");
+      }
+
+      return;
+    }
+  }
+
+  // res.status(403);
+  // res.send("The email user was not found.");
 });
 
 router.get("/register", (req, res) => {
@@ -77,16 +105,15 @@ router.post("/register", (req, res) => {
     email: email,
     password: hashPassword
   };
-  // res.cookie("user_id", newUserId);
   req.session.user_id = newUserId;
   res.redirect("/urls");
 });
 
 // route middleware to validate :shortURL
 router.param('shortURL', (req, res, next, shortURL) => {
-  const longURLExist = urlDatabase[shortURL].longURL;
+  const shortUrlExist = urlDatabase[shortURL];
 
-  if(longURLExist) {
+  if(shortUrlExist) {
     next();
     return;
   }
@@ -102,147 +129,56 @@ router.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-router.get("/login", (req, res) => {
-  res.render('login');
+// TODO: DELETE, ONLY USED FOR DEBUGGING
+router.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
 
-router.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  for(const userID in users) {
-    const user = users[userID];
-    if(user.email === email) {
-      if(bcrypt.compareSync(password, user.password)) {
-        // res.cookie("user_id", user.id);
-        req.session.user_id = user.id;
-        res.redirect('/');
-      } else {
-        res.status(403).send("The password for this email is incorrect.");
-      }
+/* -----------------------------------------
+  LOGGED-IN USER MIDDLEWARE
+ ----------------------------------------- */
 
-      return;
-    }
+router.use((req, res, next) => {
+  const user_id = req.session.user_id;
+
+  res.locals.user_id = user_id;
+
+  // Check if user is online
+  // Called in /urls/login and /urls/:id
+  if(!user_id) {
+    res.status(403);
+    res.send("Login or register a new account.");
+    return;
   }
 
-  res.status(403).send("The email user was not found.");
+  next();
 });
 
 router.post("/logout", (req, res) => {
-  // res.clearCookie("user_id");
   req.session = null;
   res.redirect('/urls');
 });
 
-/* -----------------------------------------
-  ROUTE: /urls
- ----------------------------------------- */
-
 router.get("/urls/new", (req, res) => {
-  // const user_id = req.cookies.user_id;
   const user_id = req.session.user_id;
 
-  if(!user_id) {
-    res.redirect("/login");
-    return;
-  }
+  // TODO: dead code?
+  // if(!user_id) {
+  //   res.redirect("/login");
+  //   return;
+  // }
 
-  const user = users[user_id];
-
-  const templateVars = {
-    user_id: user_id
-  };
-  res.render("urls_new", templateVars);
-});
-
-router.get("/urls/:id", (req, res) => {
-  // const user_id = req.cookies.user_id;
-  const user_id = req.session.user_id;
-
-  // Check if user is online
-  if(!user_id) {
-    // TODO: refactor to be more general
-    res.status(403);
-    res.send("Login or register a new account.");
-    return;
-  }
-
-  const user = users[user_id];
-  const shortURL = req.params.id;
-
-  // TODO: check if the entry actually exist
-  const urlOwner = urlDatabase[shortURL].user_id;
-
-  if(user_id === urlOwner) {
-    const templateVars = {
-      shortURL: shortURL,
-      longURL: urlDatabase[shortURL].longURL,
-      user_id: user_id };
-    res.render("urls_show", templateVars);
-    return;
-  }
-
-  res.status(403);
-  res.send("You do not have permissions to view this URL because you are not the owner.");
-
+  res.render("urls_new");
 });
 
 router.get("/urls/", (req, res) => {
-  // const user_id = req.cookies.user_id;
   const user_id = req.session.user_id;
-  const user = users[user_id];
 
-  // Check if user is online
-  if(!user_id) {
-    // TODO: refactor to be more general
-    res.status(403);
-    res.send("Login or register a new account.");
-    return;
-  }
-
-  const userURLs = urlsForUser(user_id);
-
-  let templateVars = {
-    urls: userURLs,
-    user_id: user_id
-  };
-  res.render("urls_index", templateVars);
-});
-
-router.post("/urls/:id/delete", (req, res) => {
-  // const user_id = req.cookies.user_id;
-  const user_id = req.session.user_id;
-  const shortURL = req.params.id;
-  const urlOwner = urlDatabase[shortURL].user_id;
-
-  if(user_id === urlOwner) {
-    delete urlDatabase[shortURL];
-    res.redirect('/urls');
-    return;
-  }
-
-  res.status(403);
-  res.send("You are not the owner of this URL to delete it.");
-});
-
-router.post("/urls/:id", (req, res) => {
-  // const user_id = req.cookies.user_id;
-  const user_id = req.session.user_id;
-  const shortURL = req.params.id;
-  const newLongURL = req.body.editURL;
-  const urlOwner = urlDatabase[shortURL].user_id;
-
-  if(user_id === urlOwner) {
-    urlDatabase[shortURL].longURL = newLongURL;
-    res.redirect(`/urls/${req.params.id}`);
-    return;
-  }
-
-  res.status(403);
-  res.send("You are not the owner of this URL to edit it.");
+  res.locals.urls = urlsForUser(user_id);
+  res.render("urls_index");
 });
 
 router.post("/urls/", (req, res) => {
-  // const user_id = req.cookies.user_id;
   const user_id = req.session.user_id;
 
   const shortURL = generateRandomString();
@@ -256,8 +192,47 @@ router.post("/urls/", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-router.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+/* -----------------------------------------
+ AUTHENTICATION MIDDLEWARE
+ ----------------------------------------- */
+
+router.param('id', (req, res, next, shortURL) => {
+  const user_id = req.session.user_id;
+  console.log(shortURL);
+  const urlOwner = urlDatabase[shortURL].user_id;
+
+  if(user_id !== urlOwner) {
+    res.status(403);
+    res.send("You do not have permissions to view this URL because you are not the owner.");
+    return;
+  }
+
+  next();
+});
+
+router.get("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+
+  const templateVars = {
+    shortURL: shortURL,
+    longURL: urlDatabase[shortURL].longURL };
+  res.render("urls_show", templateVars);
+});
+
+router.post("/urls/:id/delete", (req, res) => {
+  const shortURL = req.params.id;
+
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');
+});
+
+router.post("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const newLongURL = req.body.editURL;
+
+  urlDatabase[shortURL].longURL = newLongURL;
+  res.redirect(`/urls/${req.params.id}`);
+  return;
 });
 
 module.exports = router;

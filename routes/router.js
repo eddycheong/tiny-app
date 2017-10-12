@@ -141,15 +141,14 @@ router.get("/urls.json", (req, res) => {
 router.use((req, res, next) => {
   const user_id = req.session.user_id;
 
-  res.locals.user_id = user_id;
-
-  // Check if user is online
-  // Called in /urls/login and /urls/:id
   if(!user_id) {
     res.status(403);
     res.send("Login or register a new account.");
     return;
   }
+
+  res.locals.user_id = user_id;
+  res.locals.email = users[user_id].email;
 
   next();
 });

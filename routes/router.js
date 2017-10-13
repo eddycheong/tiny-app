@@ -1,27 +1,38 @@
 const {urlsDB, usersDB} = require("../lib/database");
 const {userAuthentication} = require("./validation_router");
 const {redirectLoggedIn} = require("./redirect_router");
+const errorRouter = require("./error_router");
 
 const urlDatabase = urlsDB.urls;
 const users = usersDB.users;
 
+const router = require('express').Router();
 
-function loggedUser(req, res, next) {
-  const sessionUserID = req.session.userID;
+function validateShortUrl(req, res, next, shortURL) {
+  const shortUrlExist = urlDatabase[shortURL];
 
-  if(!sessionUserID) {
-    res.status(403);
-    res.send("Login or register a new account.");
+  if(shortUrlExist) {
+    req.url = urlDatabase[shortURL];
+
+    next();
     return;
   }
 
-  res.locals.userID = sessionUserID;
-  res.locals.email = users[sessionUserID].email;
+  // TODO: this should be handled by the REST routes
+  res.status(404);
+  res.send(`Could not find the short URL: ${shortURL}`);
+};
 
+// Set session user
+router.use((req, res, next) => {
+  const sessionUserID = req.session.userID
+
+  if(sessionUserID) {
+    res.locals.userID = sessionUserID;
+    res.locals.email = users[sessionUserID].email;
+  }
   next();
-}
-
-const router = require('express').Router();
+});
 
 router.get("/", redirectLoggedIn, (req, res) => {
   res.redirect("/login");
@@ -35,19 +46,30 @@ router.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  for(const userID in users) {
-    const user = users[userID];
 
-    if(usersDB.compareEmail(email,user.email) &&
-        usersDB.comparePassword(password, user.password)) {
-      req.session.userID = user.id;
-      res.redirect('/');
-      return;
-    }
+  const user = usersDB.findUserByEmail(email);
+
+  if(!user) {
+    res.status(403);
+    res.send("The provided EMAIL or password was invalid.");
+    return;
   }
 
-  res.status(403);
-  res.send("The provided email or password was invalid.");
+  // for(const userID in users) {
+  //   const user = users[userID];
+
+
+    // Fragile
+  if(!usersDB.comparePassword(password, user.password)) {
+    res.status(403);
+    res.send("The provided email or PASSWORD was invalid.");
+    return;
+  }
+  // }
+
+  req.session.userID = user.id;
+  res.redirect('/');
+
 });
 
 router.get("/register", redirectLoggedIn, (req, res) => {
@@ -75,20 +97,22 @@ router.post("/register", (req, res) => {
 });
 
 // route middleware to validate :shortURL
-const test = router.param('shortURL', (req, res, next, shortURL) => {
-  const shortUrlExist = urlDatabase[shortURL];
+// router.param('shortURL', (req, res, next, shortURL) => {
+//   const shortUrlExist = urlDatabase[shortURL];
 
-  if(shortUrlExist) {
-    next();
-    return;
-  }
+//   if(shortUrlExist) {
+//     next();
+//     return;
+//   }
 
-  res.status(404);
-  res.send(`Could not find the short URL: ${req.params.shortURL}`);
-});
+//   res.status(404);
+//   res.send(`Could not find the short URL: ${req.params.shortURL}`);
+// });
 
-router.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
+router.param('id', validateShortUrl);
+
+router.get("/u/:id", (req, res) => {
+  const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL].longURL;
 
   res.redirect(longURL);
@@ -104,8 +128,8 @@ router.get("/urls/new", (req, res) => {
     return;
   }
 
-  res.locals.userID = sessionUserID;
-  res.locals.email = users[sessionUserID].email;
+  // res.locals.userID = sessionUserID;
+  // res.locals.email = users[sessionUserID].email;
 
   res.render("urls_new");
 });
@@ -114,7 +138,7 @@ router.get("/urls/new", (req, res) => {
   LOGGED-IN USER MIDDLEWARE
  ----------------------------------------- */
 
-router.use(loggedUser);
+router.use(errorRouter.notLoggedIn);
 
 router.post("/logout", (req, res) => {
   req.session = null;
@@ -140,21 +164,7 @@ router.post("/urls/", (req, res) => {
  AUTHENTICATION MIDDLEWARE
  ----------------------------------------- */
 
-// Check if ShortURL is valid
-router.param('id', (req, res, next, shortURL) => {
-  const shortUrlExist = urlDatabase[shortURL];
-
-  if(shortUrlExist) {
-    req.url = urlDatabase[shortURL];
-
-    next();
-    return;
-  }
-
-  res.status(404);
-  res.send("shortURL could not be found");
-  return;
-});
+router.param('id', validateShortUrl);
 
 router.get("/urls/:id", userAuthentication, (req, res) => {
   const shortURL = req.params.id;

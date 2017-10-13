@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
-// const database = require("./lib/database.js")
 const router = require("./routes/router.js");
 
 const app = express();

@@ -81,8 +81,8 @@ router.post("/register", (req, res) => {
     return;
   }
 
-  // Replace this with find user by email
-  if(users.hasEmail(email)) {
+  const user = users.findUserByEmail(email);
+  if(user) {
     res.status(400).send("A user is already registered with that email");
     return;
   }

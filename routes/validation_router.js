@@ -1,6 +1,6 @@
 function userAuthentication(req, res, next) {
-  const userID = req.session.user_id;
-  const urlOwner = req.url.user_id;
+  const userID = req.session.userID;
+  const urlOwner = req.url.userID;
 
   if(userID !== urlOwner) {
     res.status(403);

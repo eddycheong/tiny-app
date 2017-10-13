@@ -4,8 +4,9 @@ const {userAuthentication} = require("./validation_router.js");
 const urlDatabase = urlsDB.urls;
 const users = usersDB.users;
 
+// TODO: refactor for redirect router
 function redirectLoggedInUser(req, res, next) {
-  const sessionUserID = req.session.user_id;
+  const sessionUserID = req.session.userID;
 
   if(sessionUserID) {
     res.redirect("/urls");
@@ -15,16 +16,16 @@ function redirectLoggedInUser(req, res, next) {
 }
 
 function loggedUser(req, res, next) {
-  const user_id = req.session.user_id;
+  const sessionUserID = req.session.userID;
 
-  if(!user_id) {
+  if(!sessionUserID) {
     res.status(403);
     res.send("Login or register a new account.");
     return;
   }
 
-  res.locals.user_id = user_id;
-  res.locals.email = users[user_id].email;
+  res.locals.userID = sessionUserID;
+  res.locals.email = users[sessionUserID].email;
 
   next();
 }
@@ -48,7 +49,7 @@ router.post("/login", (req, res) => {
 
     if(usersDB.compareEmail(email,user.email) &&
         usersDB.comparePassword(password, user.password)) {
-      req.session.user_id = user.id;
+      req.session.userID = user.id;
       res.redirect('/');
       return;
     }
@@ -78,7 +79,7 @@ router.post("/register", (req, res) => {
 
   const newUser = usersDB.createUser(email, password);
 
-  req.session.user_id = newUser;
+  req.session.userID = newUser;
   res.redirect("/urls");
 });
 
@@ -105,14 +106,14 @@ router.get("/u/:shortURL", (req, res) => {
 // This route is one the few exceptions that has to redirect if user is not logged in
 // TODO: investigate if this can be better refactored
 router.get("/urls/new", (req, res) => {
-  const sessionUserID = req.session.user_id;
+  const sessionUserID = req.session.userID;
 
   if(!sessionUserID) {
     res.redirect("/login");
     return;
   }
 
-  res.locals.user_id = sessionUserID;
+  res.locals.userID = sessionUserID;
   res.locals.email = users[sessionUserID].email;
 
   res.render("urls_new");
@@ -130,14 +131,14 @@ router.post("/logout", (req, res) => {
 });
 
 router.get("/urls/", (req, res) => {
-  const user_id = req.session.user_id;
+  const sessionUserID = req.session.userID;
 
-  res.locals.urls = urlsDB.urlsForUser(user_id);
+  res.locals.urls = urlsDB.urlsForUser(sessionUserID);
   res.render("urls_index");
 });
 
 router.post("/urls/", (req, res) => {
-  const sessionUserID = req.session.user_id;
+  const sessionUserID = req.session.userID;
   const longURL = req.body.longURL;
 
   const shortURL = urlsDB.createUrlByUser(longURL, sessionUserID);

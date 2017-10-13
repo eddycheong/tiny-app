@@ -1,10 +1,8 @@
-const bodyParser = require("body-parser");
-const cookieSession = require("cookie-session");
-
 const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
-
+const bodyParser = require("body-parser");
+const cookieSession = require("cookie-session");
 const router = require("./routes/router.js");
 
 app.set("view engine", "ejs");
@@ -15,8 +13,9 @@ app.use(cookieSession({
   keys: ["key1", "key2"]
 }));
 
+// Applying the main route to our application
 app.use('/', router);
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });

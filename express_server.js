@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
+// const database = require("./lib/database.js")
 const router = require("./routes/router.js");
 
 const app = express();
@@ -14,7 +15,6 @@ app.use(cookieSession({
   secret: process.env.SESSION_SECRET || "development"
 }));
 
-// Applying the main route to our application
 app.use(router);
 
 const server = app.listen(app.get("port"), () => {

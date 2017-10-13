@@ -3,8 +3,11 @@ const hash = (password) => {
   return bcrypt.hashSync(password, 10);
 };
 
-const {urlDatabase, users} = require("../lib/database");
+const {urlsDB, usersDB} = require("../lib/database");
 const {userAuthentication} = require("./validation_router.js");
+
+const urlDatabase = urlsDB.urls;
+const users = usersDB.users;
 
 function redirectLoggedInUser(req, res, next) {
   const sessionUserID = req.session.user_id;
@@ -30,20 +33,6 @@ function loggedUser(req, res, next) {
 
   next();
 }
-
-function urlsForUser(id) {
-  const userURLs = {};
-
-  for(const shortURL in urlDatabase) {
-    if(urlDatabase[shortURL].user_id === id) {
-      userURLs[shortURL] = urlDatabase[shortURL];
-    }
-  }
-
-  return userURLs;
-}
-
-const generateRandomString = require('../lib/generate_random_string');
 
 const express = require('express');
 const router = express.Router();
@@ -86,9 +75,9 @@ router.get("/register", redirectLoggedInUser, (req, res) => {
 
 router.post("/register", (req, res) => {
   const email = req.body.email;
-  const hashPassword = hash(req.body.password);
+  const password = req.body.password;
 
-  if(!email || !hashPassword) {
+  if(!email || !password) {
     res.status(400).send("Could not register a new user. Either email or password is empty.");
   }
 
@@ -99,14 +88,9 @@ router.post("/register", (req, res) => {
     }
   }
 
-  // TODO: createUser
-  const newUserId = generateRandomString();
-  users[newUserId] = {
-    id: newUserId,
-    email: email,
-    password: hashPassword
-  };
-  req.session.user_id = newUserId;
+  const newUser = usersDB.createUser(email, password);
+
+  req.session.user_id = newUser;
   res.redirect("/urls");
 });
 
@@ -160,22 +144,16 @@ router.post("/logout", (req, res) => {
 router.get("/urls/", (req, res) => {
   const user_id = req.session.user_id;
 
-  res.locals.urls = urlsForUser(user_id);
+  res.locals.urls = urlsDB.urlsForUser(user_id);
   // res.locals.urls = urlDatabase;
   res.render("urls_index");
 });
 
 router.post("/urls/", (req, res) => {
-  const user_id = req.session.user_id;
-
-  const shortURL = generateRandomString();
+  const sessionUserID = req.session.user_id;
   const longURL = req.body.longURL;
 
-  const userURL = {};
-  userURL.longURL = longURL;
-  userURL.user_id = user_id;
-
-  urlDatabase[shortURL] = userURL;
+  const shortURL = urlsDB.createUrlByUser(longURL, sessionUserID);
   res.redirect(`/urls/${shortURL}`);
 });
 

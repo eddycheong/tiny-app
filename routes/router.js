@@ -1,8 +1,3 @@
-const bcrypt = require("bcrypt");
-const hash = (password) => {
-  return bcrypt.hashSync(password, 10);
-};
-
 const {urlsDB, usersDB} = require("../lib/database");
 const {userAuthentication} = require("./validation_router.js");
 
@@ -51,22 +46,17 @@ router.post("/login", (req, res) => {
 
   for(const userID in users) {
     const user = users[userID];
-    if(user.email === email) {
-      if(bcrypt.compareSync(password, user.password)) {
-        req.session.user_id = user.id;
-        res.redirect('/');
-      } else {
-        // res.render("login", {error: ""});
-        res.status(403);
-        res.send("The password for this email is incorrect.");
-      }
 
+    if(usersDB.compareEmail(email,user.email) &&
+        usersDB.comparePassword(password, user.password)) {
+      res.session.user_id = user.id;
+      res.redirect('/');
       return;
     }
   }
 
   res.status(403);
-  res.send("The email user was not found.");
+  res.send("The provided email or password was invalid.");
 });
 
 router.get("/register", redirectLoggedInUser, (req, res) => {

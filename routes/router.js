@@ -29,8 +29,7 @@ function loggedUser(req, res, next) {
   next();
 }
 
-const express = require('express');
-const router = express.Router();
+const router = require('express').Router();
 
 router.get("/", redirectLoggedInUser, (req, res) => {
   res.redirect("/login");
@@ -49,7 +48,7 @@ router.post("/login", (req, res) => {
 
     if(usersDB.compareEmail(email,user.email) &&
         usersDB.comparePassword(password, user.password)) {
-      res.session.user_id = user.id;
+      req.session.user_id = user.id;
       res.redirect('/');
       return;
     }
@@ -69,13 +68,12 @@ router.post("/register", (req, res) => {
 
   if(!email || !password) {
     res.status(400).send("Could not register a new user. Either email or password is empty.");
+    return;
   }
 
-  for(const userID in users) {
-    if(email === users[userID].email) {
-      res.status(400).send("A user is already registered with that email");
-      return;
-    }
+  if(usersDB.hasEmail(email)) {
+    res.status(400).send("A user is already registered with that email");
+    return;
   }
 
   const newUser = usersDB.createUser(email, password);
@@ -135,7 +133,6 @@ router.get("/urls/", (req, res) => {
   const user_id = req.session.user_id;
 
   res.locals.urls = urlsDB.urlsForUser(user_id);
-  // res.locals.urls = urlDatabase;
   res.render("urls_index");
 });
 
@@ -180,7 +177,7 @@ router.post("/urls/:id/delete", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
 
   delete urlDatabase[shortURL];
-  res.redirect('/urls');
+  res.redirect("/urls");
 });
 
 router.post("/urls/:id", userAuthentication, (req, res) => {
@@ -188,8 +185,7 @@ router.post("/urls/:id", userAuthentication, (req, res) => {
   const newLongURL = req.body.editURL;
 
   urlDatabase[shortURL].longURL = newLongURL;
-  res.redirect(`/urls`);
-  return;
+  res.redirect("/urls");
 });
 
 module.exports = router;

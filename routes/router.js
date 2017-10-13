@@ -184,7 +184,7 @@ router.post("/urls/", (req, res) => {
  ----------------------------------------- */
 
 // Check if ShortURL is valid
-function validateURL(req, res, next, shortURL) {
+router.param('id', (req, res, next, shortURL) => {
   const shortUrlExist = urlDatabase[shortURL];
 
   if(shortUrlExist) {
@@ -197,17 +197,15 @@ function validateURL(req, res, next, shortURL) {
   res.status(404);
   res.send("shortURL could not be found");
   return;
-}
-
-router.param('id', validateURL);
+});
 
 router.get("/urls/:id", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
 
-  const templateVars = {
-    shortURL: shortURL,
-    longURL: urlDatabase[shortURL].longURL };
-  res.render("urls_show", templateVars);
+  res.locals.shortURL = shortURL;
+  res.locals.longURL = urlDatabase[shortURL].longURL;
+
+  res.render("urls_show");
 });
 
 router.post("/urls/:id/delete", userAuthentication, (req, res) => {

@@ -1,19 +1,10 @@
 const {urlsDB, usersDB} = require("../lib/database");
-const {userAuthentication} = require("./validation_router.js");
+const {userAuthentication} = require("./validation_router");
+const {redirectLoggedIn} = require("./redirect_router");
 
 const urlDatabase = urlsDB.urls;
 const users = usersDB.users;
 
-// TODO: refactor for redirect router
-function redirectLoggedInUser(req, res, next) {
-  const sessionUserID = req.session.userID;
-
-  if(sessionUserID) {
-    res.redirect("/urls");
-    return;
-  }
-  next();
-}
 
 function loggedUser(req, res, next) {
   const sessionUserID = req.session.userID;
@@ -32,11 +23,11 @@ function loggedUser(req, res, next) {
 
 const router = require('express').Router();
 
-router.get("/", redirectLoggedInUser, (req, res) => {
+router.get("/", redirectLoggedIn, (req, res) => {
   res.redirect("/login");
 });
 
-router.get("/login", redirectLoggedInUser, (req, res) => {
+router.get("/login", redirectLoggedIn, (req, res) => {
   res.render('login');
 });
 
@@ -59,7 +50,7 @@ router.post("/login", (req, res) => {
   res.send("The provided email or password was invalid.");
 });
 
-router.get("/register", redirectLoggedInUser, (req, res) => {
+router.get("/register", redirectLoggedIn, (req, res) => {
   res.render('register');
 });
 
@@ -77,14 +68,14 @@ router.post("/register", (req, res) => {
     return;
   }
 
-  const newUser = usersDB.createUser(email, password);
+  const newUserID = usersDB.createUser(email, password);
 
-  req.session.userID = newUser;
+  req.session.userID = newUserID;
   res.redirect("/urls");
 });
 
 // route middleware to validate :shortURL
-router.param('shortURL', (req, res, next, shortURL) => {
+const test = router.param('shortURL', (req, res, next, shortURL) => {
   const shortUrlExist = urlDatabase[shortURL];
 
   if(shortUrlExist) {

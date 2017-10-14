@@ -26,7 +26,7 @@ function validateShortUrl(req, res, next, shortURL) {
   res.status(404);
   res.render("404", {
       status: 404,
-      error: "You do not have permissions to view this URL because you are not the owner."
+      error: `Could not find the short URL: ${shortURL}`
     });
 }
 

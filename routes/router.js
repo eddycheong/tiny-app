@@ -1,26 +1,9 @@
 const router = require('express').Router();
-
-const {userAuthentication} = require("./validation_router");
-const errorRouter = require("./error_router");
-
-function validateShortUrl(req, res, next, shortURL) {
-  const shortUrlExist = req.db.urls.data[shortURL];
-
-  if(shortUrlExist) {
-    req.url = req.db.urls.data[shortURL];
-
-    next();
-    return;
-  }
-
-  // TODO: this should be handled by the REST routes
-  res.status(404);
-  res.send(`Could not find the short URL: ${shortURL}`);
-};
+const {userAuthentication, validateShortUrl} = require("../middleware/validation");
 
 // Set user session information
 router.use((req, res, next) => {
-  const sessionUserID = req.session.userID
+  const sessionUserID = req.session.userID;
   const users = req.db.users.data;
 
   res.locals.userID = undefined;
@@ -133,7 +116,18 @@ router.get("/urls/new", (req, res) => {
   LOGGED-IN USER MIDDLEWARE
  ----------------------------------------- */
 
-router.use(errorRouter.notLoggedIn);
+router.use((req, res, next) => {
+  const sessionUserID = req.session.userID;
+  const users = req.db.users.data;
+
+  if(!(sessionUserID in users)) {
+    res.status(403);
+    res.send("Login or register a new account.");
+    return;
+  }
+
+  next();
+});
 
 router.post("/logout", (req, res) => {
   req.session = null;
@@ -151,6 +145,7 @@ router.get("/urls/", (req, res) => {
 router.post("/urls/", (req, res) => {
   const sessionUserID = req.session.userID;
   const longURL = req.body.longURL;
+  const urls = req.db.urls;
 
   const shortURL = urls.createUrlByUser(longURL, sessionUserID);
   res.redirect(`/urls/${shortURL}`);
@@ -164,25 +159,28 @@ router.param('id', validateShortUrl);
 
 router.get("/urls/:id", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
+  const urlsData = req.db.urls.data;
 
   res.locals.shortURL = shortURL;
-  res.locals.longURL = req.db.urls.data[shortURL].longURL;
+  res.locals.longURL = urlsData[shortURL].longURL;
 
   res.render("urls_show");
 });
 
 router.post("/urls/:id/delete", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
+  const urlsData = req.db.urls.data;
 
-  delete req.db.urls.data[shortURL];
+  delete urlsData[shortURL];
   res.redirect("/urls");
 });
 
 router.post("/urls/:id", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
   const newLongURL = req.body.editURL;
+  const urlsData = req.db.urls.data;
 
-  req.db.urls.data[shortURL].longURL = newLongURL;
+  urlsData[shortURL].longURL = newLongURL;
   res.redirect("/urls");
 });
 

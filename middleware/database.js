@@ -6,6 +6,6 @@ module.exports = function(req, res, next) {
   req.db = {
     urls: urls,
     users: users
-  }
+  };
   next();
-}
+};

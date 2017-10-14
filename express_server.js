@@ -7,7 +7,7 @@ const database = require("./middleware/database");
 const app = express();
 
 app.set("view engine", "ejs");
-app.set("port", process.env.PORT || 8080)
+app.set("port", process.env.PORT || 8080);
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({

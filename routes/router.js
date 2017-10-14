@@ -43,13 +43,19 @@ router.post("/login", (req, res) => {
   const user = users.findUserByEmail(email);
   if(!user) {
     res.status(403);
-    res.send("The provided email or password was invalid.");
+    res.render("403", {
+      status: 403,
+      error: "The provided email or password was invalid."
+    });
     return;
   }
 
   if(!users.comparePassword(password, user.password)) {
     res.status(403);
-    res.send("The provided email or password was invalid.");
+    res.render("403", {
+      status: 403,
+      error: "The provided email or password was invalid."
+    });
     return;
   }
 
@@ -75,14 +81,20 @@ router.post("/register", (req, res) => {
 
   if(!email || !password) {
     res.status(400);
-    res.send("Could not register a new user. Either email or password is empty.");
+    res.render("400", {
+      status: 400,
+      error: "Could not register a new user. Either email or password is empty."
+    });
     return;
   }
 
   const user = users.findUserByEmail(email);
   if(user) {
     res.status(400);
-    res.send("A user is already registered with that email");
+    res.render("400", {
+      status: 400,
+      error: "A user is already registered with that email"
+    });
     return;
   }
 
@@ -122,7 +134,10 @@ router.use((req, res, next) => {
 
   if(!(sessionUserID in users)) {
     res.status(403);
-    res.send("Login or register a new account.");
+    res.render("403", {
+      status: 403,
+      error: "Login or register a new account."
+    });
     return;
   }
 

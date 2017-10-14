@@ -1,7 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
-const router = require("./routes/router.js");
+const router = require("./routes/router");
+const database = require("./middleware/database");
 
 const app = express();
 
@@ -13,7 +14,7 @@ app.use(cookieSession({
   name: "session",
   secret: process.env.SESSION_SECRET || "development"
 }));
-
+app.use(database);
 app.use(router);
 
 const server = app.listen(app.get("port"), () => {

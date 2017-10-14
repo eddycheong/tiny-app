@@ -4,17 +4,11 @@ const {userAuthentication} = require("./validation_router");
 const {redirectLoggedIn} = require("./redirect_router");
 const errorRouter = require("./error_router");
 
-const urls = require("../lib/urls");
-const users = require("../lib/users");
-
-const urlDatabase = urls.data;
-const usersDatabase = users.data;
-
 function validateShortUrl(req, res, next, shortURL) {
-  const shortUrlExist = urlDatabase[shortURL];
+  const shortUrlExist = req.db.urls.data[shortURL];
 
   if(shortUrlExist) {
-    req.url = urlDatabase[shortURL];
+    req.url = req.db.urls.data[shortURL];
 
     next();
     return;
@@ -31,7 +25,7 @@ router.use((req, res, next) => {
 
   if(sessionUserID) {
     res.locals.userID = sessionUserID;
-    res.locals.email = usersDatabase[sessionUserID].email;
+    res.locals.email = req.db.users.data[sessionUserID].email;
   }
   next();
 });
@@ -47,19 +41,18 @@ router.get("/login", redirectLoggedIn, (req, res) => {
 router.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
+  const users = req.db.users;
 
   const user = users.findUserByEmail(email);
-
   if(!user) {
     res.status(403);
-    res.send("The provided EMAIL or password was invalid.");
+    res.send("The provided email or password was invalid.");
     return;
   }
 
   if(!users.comparePassword(password, user.password)) {
     res.status(403);
-    res.send("The provided email or PASSWORD was invalid.");
+    res.send("The provided email or password was invalid.");
     return;
   }
 
@@ -75,15 +68,18 @@ router.get("/register", redirectLoggedIn, (req, res) => {
 router.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const users = req.db.users;
 
   if(!email || !password) {
-    res.status(400).send("Could not register a new user. Either email or password is empty.");
+    res.status(400);
+    res.send("Could not register a new user. Either email or password is empty.");
     return;
   }
 
   const user = users.findUserByEmail(email);
   if(user) {
-    res.status(400).send("A user is already registered with that email");
+    res.status(400);
+    res.send("A user is already registered with that email");
     return;
   }
 
@@ -97,7 +93,7 @@ router.param('id', validateShortUrl);
 
 router.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL].longURL;
+  const longURL = req.db.urls.data[shortURL].longURL;
 
   res.redirect(longURL);
 });
@@ -126,6 +122,7 @@ router.post("/logout", (req, res) => {
 
 router.get("/urls/", (req, res) => {
   const sessionUserID = req.session.userID;
+  const urls = req.db.urls;
 
   res.locals.urls = urls.urlsForUser(sessionUserID);
   res.render("urls_index");
@@ -149,7 +146,7 @@ router.get("/urls/:id", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
 
   res.locals.shortURL = shortURL;
-  res.locals.longURL = urlDatabase[shortURL].longURL;
+  res.locals.longURL = req.db.urls.data[shortURL].longURL;
 
   res.render("urls_show");
 });
@@ -157,7 +154,7 @@ router.get("/urls/:id", userAuthentication, (req, res) => {
 router.post("/urls/:id/delete", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
 
-  delete urlDatabase[shortURL];
+  delete req.db.urls.data[shortURL];
   res.redirect("/urls");
 });
 
@@ -165,7 +162,7 @@ router.post("/urls/:id", userAuthentication, (req, res) => {
   const shortURL = req.params.id;
   const newLongURL = req.body.editURL;
 
-  urlDatabase[shortURL].longURL = newLongURL;
+  req.db.urls.data[shortURL].longURL = newLongURL;
   res.redirect("/urls");
 });
 

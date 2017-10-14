@@ -1,7 +1,6 @@
 const router = require('express').Router();
 
 const {userAuthentication} = require("./validation_router");
-const {redirectLoggedIn} = require("./redirect_router");
 const errorRouter = require("./error_router");
 
 function validateShortUrl(req, res, next, shortURL) {
@@ -19,22 +18,37 @@ function validateShortUrl(req, res, next, shortURL) {
   res.send(`Could not find the short URL: ${shortURL}`);
 };
 
-// Set session user
+// Set user session information
 router.use((req, res, next) => {
   const sessionUserID = req.session.userID
+  const users = req.db.users.data;
 
-  if(sessionUserID) {
+  res.locals.userID = undefined;
+
+  if(sessionUserID in users) {
     res.locals.userID = sessionUserID;
-    res.locals.email = req.db.users.data[sessionUserID].email;
+    res.locals.email = users[sessionUserID].email;
   }
   next();
 });
 
-router.get("/", redirectLoggedIn, (req, res) => {
+router.get("/", (req, res) => {
+  const sessionUserID = req.session.userID;
+  if(sessionUserID) {
+    res.redirect("/urls");
+    return;
+  }
+
   res.redirect("/login");
 });
 
-router.get("/login", redirectLoggedIn, (req, res) => {
+router.get("/login", (req, res) => {
+  const sessionUserID = req.session.userID;
+  if(sessionUserID) {
+    res.redirect("/urls");
+    return;
+  }
+
   res.render('login');
 });
 
@@ -61,7 +75,13 @@ router.post("/login", (req, res) => {
 
 });
 
-router.get("/register", redirectLoggedIn, (req, res) => {
+router.get("/register", (req, res) => {
+  const sessionUserID = req.session.userID;
+  if(sessionUserID) {
+    res.redirect("/urls");
+    return;
+  }
+
   res.render('register');
 });
 
